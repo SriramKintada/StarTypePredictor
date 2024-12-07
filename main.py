@@ -13,23 +13,25 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://starsize.streamlit.app/"],
+    allow_origins=["https://starsize.streamlit.app/"],  # Only this origin will be allowed
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
 )
-
 
 @app.get("/")
 def default():
-    """
-    Default endpoint to check if the application is running.
-
-    Returns:
-        dict: A simple message indicating the application is running.
-    """
+    """Default endpoint to check if the application is running."""
     return {"App": "Running"}
 
+def determine_fit(cv_score, val_score):
+    """Function to determine overfitting, underfitting, or good fit."""
+    if cv_score + 0.5 < val_score:
+        return "overfitting"
+    elif cv_score - 0.5 > val_score:
+        return "underfitting"
+    else:
+        return "good fit"
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -38,15 +40,11 @@ async def predict(file: UploadFile = File(...)):
 
     # Load the CSV data into a DataFrame
     df = pd.read_csv(io.BytesIO(contents))
-
     x = df.iloc[:, :-1]
     y = df.iloc[:, -1:]
 
     # Train-test split
-    X_train, X_test, y_train, y_test = train_test_split(
-        x, y, test_size=0.3, random_state=0
-    )
-
+    X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
     reg = LogisticRegression()
     reg.fit(X_train, y_train)
 
@@ -86,14 +84,6 @@ async def predict(file: UploadFile = File(...)):
     d = np.mean(cross_val_score(clg, X_train, y_train, cv=10))
 
     # Fitting analysis
-    def determine_fit(cv_score, val_score):
-        if cv_score + 0.5 < val_score:
-            return "overfitting"
-        elif cv_score - 0.5 > val_score:
-            return "underfitting"
-        else:
-            return "good fit"
-
     k = determine_fit(a, r2_score)
     l = determine_fit(b, r2_score_stand)
     m = determine_fit(c, r2_score_min)
@@ -118,6 +108,7 @@ async def predict(file: UploadFile = File(...)):
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=predictions.csv"},
     )
+
 
 #Summary
 # In no scalling we just run logistic regression on our data frame and claculate validation and r2score using test dataframe
