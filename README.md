@@ -3,6 +3,8 @@ This web application allows you to do the following:-
 1. Predict type of a single star using single prediction mode.
 2. Predict type of multiple stars using bulk prediction mode.
 
+LINK : https://sriramkintada-startypepredictor-frontend-sgrwpg.streamlit.app/
+
 ## SETUP INSTRUCTIONS ##
 1. Clone this repository using the web URL given below or download the ZIP file.
    ```bash
